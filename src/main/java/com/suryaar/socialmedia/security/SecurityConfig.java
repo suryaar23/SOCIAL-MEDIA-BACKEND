@@ -55,6 +55,7 @@ public class SecurityConfig {
                                 "/api/users/*/followers",
                                 "/api/users/*/following"
                         ).permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(

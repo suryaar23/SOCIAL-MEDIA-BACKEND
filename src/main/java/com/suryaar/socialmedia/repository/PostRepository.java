@@ -39,4 +39,9 @@ public interface PostRepository
             Long excludedUserId,
             Pageable pageable
     );
+
+    Page<Post> findByUserStatusOrderByCreatedAtDesc(
+            UserStatus status,
+            Pageable pageable
+    );
 }

@@ -3,6 +3,8 @@ package com.suryaar.socialmedia.repository;
 
 import com.suryaar.socialmedia.entity.User;
 import com.suryaar.socialmedia.entity.UserStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import org.springframework.data.jpa.repository.Modifying;
@@ -46,5 +48,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
       AND u.status = com.suryaar.socialmedia.entity.UserStatus.ACTIVE
     """)
     int softDeleteUser(@Param("userId") Long userId);
+
+    Page<User> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
 }

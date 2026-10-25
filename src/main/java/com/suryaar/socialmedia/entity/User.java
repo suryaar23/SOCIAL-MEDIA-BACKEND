@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import com.suryaar.socialmedia.entity.UserRole;
 
 @Entity
 @Table(name = "users")
@@ -43,6 +46,10 @@ public class User {
     @Column(name = "token_version", nullable = false)
     private Integer tokenVersion = 0;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private UserRole role = UserRole.USER;
+
     @PrePersist
     private void prePersist() {
         createdAt = LocalDateTime.now();
@@ -56,8 +63,6 @@ public class User {
 
     public User() {
     }
-
-    // Getters and setters
 
     public Long getUserId() {
         return userId;
@@ -134,5 +139,9 @@ public class User {
     public Integer getTokenVersion() { return tokenVersion; }
 
     public void setTokenVersion(Integer tokenVersion) { this.tokenVersion = tokenVersion; }
+
+    public UserRole getRole() {
+        return role;
+    }
 }
 
