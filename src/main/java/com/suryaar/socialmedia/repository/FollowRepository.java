@@ -21,4 +21,13 @@ public interface FollowRepository
         """)
     int deleteAllRelationshipsForUser(
             @Param("userId") Long userId);
+
+    long countByFollowing_UserId(Long userId);
+
+    long countByFollower_UserId(Long userId);
+
+    boolean existsByFollower_UserIdAndFollowing_UserId(
+            Long followerId,
+            Long followingId);
+
 }

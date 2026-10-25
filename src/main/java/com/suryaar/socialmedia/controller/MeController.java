@@ -5,6 +5,7 @@ import com.suryaar.socialmedia.dto.MeResponse;
 import com.suryaar.socialmedia.dto.UpdateMyProfileRequest;
 import com.suryaar.socialmedia.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +23,10 @@ public class MeController {
     @GetMapping
     public ResponseEntity<MeResponse> getMyProfile(
             Authentication authentication) {
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
         Long userId = (Long) authentication.getPrincipal();
 

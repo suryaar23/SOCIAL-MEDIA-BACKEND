@@ -12,4 +12,6 @@ public interface CommentRepository
     Page<Comment> findByPostPostIdOrderByCreatedAtDesc(
             Long postId,
             Pageable pageable);
+
+    long countByPostPostId(Long postId);
 }
