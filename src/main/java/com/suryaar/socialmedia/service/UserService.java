@@ -2,8 +2,7 @@
 package com.suryaar.socialmedia.service;
 
 import com.suryaar.socialmedia.dto.*;
-import com.suryaar.socialmedia.entity.User;
-import com.suryaar.socialmedia.entity.UserStatus;
+import com.suryaar.socialmedia.entity.*;
 import com.suryaar.socialmedia.exception.InvalidCredentialsException;
 import com.suryaar.socialmedia.repository.FollowRepository;
 import com.suryaar.socialmedia.repository.PostRepository;
@@ -32,7 +31,10 @@ import com.suryaar.socialmedia.repository.LikeRepository;
 import com.suryaar.socialmedia.repository.PostMediaRepository;
 import java.util.List;
 
-import com.suryaar.socialmedia.entity.Post;
+import com.suryaar.socialmedia.dto.CommentResponse;
+import com.suryaar.socialmedia.dto.CreateCommentRequest;
+
+import com.suryaar.socialmedia.dto.UpdateCommentRequest;
 
 @Service
 public class UserService {
@@ -462,5 +464,208 @@ public class UserService {
                 post.getUpdatedAt(),
                 likedByMe
         );
+    }
+
+
+    @Transactional
+    public CommentResponse createComment(
+            Long userId,
+            Long postId,
+            CreateCommentRequest request) {
+
+        User user = userRepository
+                .findById(userId)
+                .filter(u -> u.getStatus() == UserStatus.ACTIVE)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"
+                ));
+
+        Post post = postRepository
+                .findByPostIdAndUserStatus(postId, UserStatus.ACTIVE)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Post not found"
+                ));
+
+        Comment comment = new Comment(
+                user,
+                post,
+                request.getText().trim()
+        );
+
+        Comment savedComment = commentRepository.save(comment);
+
+        return new CommentResponse(
+                savedComment.getCommentId(),
+                user.getUsername(),
+                user.getProfilePicture(),
+                savedComment.getText(),
+                savedComment.getCreatedAt(),
+                savedComment.getUpdatedAt()
+        );
+    }
+
+
+    @Transactional(readOnly = true)
+    public Page<CommentResponse> getComments(
+            Long userId, Long postId, int page, int size) {
+
+        if (page < 0 || size < 1 || size > 50) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid pagination parameters"
+            );
+        }
+
+        // Ensure the requesting user is active.
+        userRepository.findById(userId)
+                .filter(user -> user.getStatus() == UserStatus.ACTIVE)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"
+                ));
+
+        // Ensure the post exists and its author is active.
+        postRepository.findByPostIdAndUserStatus(
+                postId, UserStatus.ACTIVE
+        ).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Post not found"
+        ));
+
+        Pageable pageable = PageRequest.of(
+                page, size, Sort.by("createdAt").descending()
+        );
+
+        return commentRepository
+                .findByPostPostIdOrderByCreatedAtDesc(postId, pageable)
+                .map(comment -> {
+                    User author = comment.getUser();
+
+                    boolean deletedAuthor =
+                            author.getStatus() == UserStatus.DELETED;
+
+                    return new CommentResponse(
+                            comment.getCommentId(),
+                            deletedAuthor ? "Deleted User" : author.getUsername(),
+                            deletedAuthor ? null : author.getProfilePicture(),
+                            comment.getText(),
+                            comment.getCreatedAt(),
+                            comment.getUpdatedAt()
+                    );
+                });
+    }
+
+
+    @Transactional
+    public CommentResponse updateComment(
+            Long userId,
+            Long postId,
+            Long commentId,
+            UpdateCommentRequest request) {
+
+        User user = userRepository.findById(userId)
+                .filter(u -> u.getStatus() == UserStatus.ACTIVE)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"
+                ));
+
+        Comment comment = commentRepository
+                .findByCommentIdAndPostPostId(commentId, postId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Comment not found"
+                ));
+
+        if (!comment.getUser().getUserId().equals(userId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You can only edit your own comments"
+            );
+        }
+
+        comment.setText(request.getText().trim());
+
+        return new CommentResponse(
+                comment.getCommentId(),
+                user.getUsername(),
+                user.getProfilePicture(),
+                comment.getText(),
+                comment.getCreatedAt(),
+                comment.getUpdatedAt()
+        );
+    }
+
+
+    @Transactional
+    public void deleteComment(
+            Long userId,
+            Long postId,
+            Long commentId) {
+
+        userRepository.findById(userId)
+                .filter(user -> user.getStatus() == UserStatus.ACTIVE)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"
+                ));
+
+        Comment comment = commentRepository
+                .findByCommentIdAndPostPostId(commentId, postId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Comment not found"
+                ));
+
+        if (!comment.getUser().getUserId().equals(userId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You can only delete your own comments"
+            );
+        }
+
+        commentRepository.delete(comment);
+    }
+
+
+    @Transactional
+    public void likePost(Long userId, Long postId) {
+
+        User user = userRepository.findById(userId)
+                .filter(u -> u.getStatus() == UserStatus.ACTIVE)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"
+                ));
+
+        Post post = postRepository
+                .findByPostIdAndUserStatus(postId, UserStatus.ACTIVE)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Post not found"
+                ));
+
+        boolean alreadyLiked =
+                likeRepository.existsByUserUserIdAndPostPostId(
+                        userId, postId
+                );
+
+        if (alreadyLiked) {
+            return;
+        }
+
+        Like like = new Like(user, post);
+        likeRepository.save(like);
+    }
+
+
+    @Transactional
+    public void unlikePost(Long userId, Long postId) {
+
+        userRepository.findById(userId)
+                .filter(user -> user.getStatus() == UserStatus.ACTIVE)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"
+                ));
+
+        postRepository.findByPostIdAndUserStatus(
+                postId, UserStatus.ACTIVE
+        ).orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Post not found"
+        ));
+
+        likeRepository.deleteLike(userId, postId);
     }
 }
