@@ -25,16 +25,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import com.suryaar.socialmedia.dto.PublicPostResponse;
 
-import com.suryaar.socialmedia.dto.MediaResponse;
 import com.suryaar.socialmedia.repository.CommentRepository;
 import com.suryaar.socialmedia.repository.LikeRepository;
 import com.suryaar.socialmedia.repository.PostMediaRepository;
 import java.util.List;
-
-import com.suryaar.socialmedia.dto.CommentResponse;
-import com.suryaar.socialmedia.dto.CreateCommentRequest;
-
-import com.suryaar.socialmedia.dto.UpdateCommentRequest;
 
 @Service
 public class UserService {
@@ -668,4 +662,218 @@ public class UserService {
 
         likeRepository.deleteLike(userId, postId);
     }
+
+
+    @Transactional
+    public void followUser(Long followerId, String username) {
+
+        User follower = userRepository.findById(followerId)
+                .filter(user -> user.getStatus() == UserStatus.ACTIVE)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"
+                ));
+
+        User following = userRepository
+                .findByUsernameAndStatus(username, UserStatus.ACTIVE)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Target user not found"
+                ));
+
+        if (followerId.equals(following.getUserId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "You cannot follow yourself"
+            );
+        }
+
+        boolean alreadyFollowing =
+                followRepository
+                        .existsByFollower_UserIdAndFollowing_UserId(
+                                followerId, following.getUserId()
+                        );
+
+        if (alreadyFollowing) {
+            return;
+        }
+
+        Follow follow = new Follow(follower, following);
+        followRepository.save(follow);
+    }
+
+
+    @Transactional
+    public void unfollowUser(Long followerId, String username) {
+
+        userRepository.findById(followerId)
+                .filter(user -> user.getStatus() == UserStatus.ACTIVE)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"
+                ));
+
+        User following = userRepository
+                .findByUsernameAndStatus(username, UserStatus.ACTIVE)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Target user not found"
+                ));
+
+        if (followerId.equals(following.getUserId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "You cannot unfollow yourself"
+            );
+        }
+
+        followRepository.deleteFollow(
+                followerId, following.getUserId()
+        );
+    }
+
+
+    @Transactional(readOnly = true)
+    public Page<FollowUserResponse> getFollowers(
+            String username, int page, int size) {
+
+        if (page < 0 || size < 1 || size > 50) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid pagination parameters"
+            );
+        }
+
+        User targetUser = userRepository
+                .findByUsernameAndStatus(username, UserStatus.ACTIVE)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"
+                ));
+
+        Pageable pageable = PageRequest.of(
+                page, size, Sort.by("follower.username").ascending()
+        );
+
+        return followRepository
+                .findByFollowing_UserIdOrderByFollowerUsernameAsc(
+                        targetUser.getUserId(), pageable
+                )
+                .map(follow -> new FollowUserResponse(
+                        follow.getFollower().getUsername(),
+                        follow.getFollower().getProfilePicture()
+                ));
+    }
+
+
+    @Transactional(readOnly = true)
+    public Page<FollowUserResponse> getFollowing(
+            String username, int page, int size) {
+
+        if (page < 0 || size < 1 || size > 50) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid pagination parameters"
+            );
+        }
+
+        User targetUser = userRepository
+                .findByUsernameAndStatus(username, UserStatus.ACTIVE)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"
+                ));
+
+        Pageable pageable = PageRequest.of(
+                page, size, Sort.by("following.username").ascending()
+        );
+
+        return followRepository
+                .findByFollower_UserIdOrderByFollowingUsernameAsc(
+                        targetUser.getUserId(), pageable
+                )
+                .map(follow -> new FollowUserResponse(
+                        follow.getFollowing().getUsername(),
+                        follow.getFollowing().getProfilePicture()
+                ));
+    }
+
+
+    @Transactional(readOnly = true)
+    public Page<PublicPostResponse> getFeed(
+            Long userId, int page, int size) {
+
+        if (page < 0 || size < 1 || size > 50) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid pagination parameters"
+            );
+        }
+
+        User currentUser = userRepository.findById(userId)
+                .filter(user -> user.getStatus() == UserStatus.ACTIVE)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"
+                ));
+
+        List<Long> followingIds = followRepository
+                .findByFollower_UserIdOrderByFollowingUsernameAsc(
+                        userId, Pageable.unpaged()
+                )
+                .stream()
+                .map(follow -> follow.getFollowing().getUserId())
+                .toList();
+
+        if (followingIds.isEmpty()) {
+            return Page.empty(PageRequest.of(page, size));
+        }
+
+        Pageable pageable = PageRequest.of(
+                page, size, Sort.by("createdAt").descending()
+        );
+
+        return postRepository
+                .findByUserUserIdInAndUserStatusAndUserUserIdNotOrderByCreatedAtDesc(
+                        followingIds, UserStatus.ACTIVE,
+                        currentUser.getUserId(), pageable
+                )
+                .map(post -> {
+                    List<MediaResponse> mediaResponses =
+                            postMediaRepository
+                                    .findByPostPostIdOrderByPositionAsc(
+                                            post.getPostId()
+                                    )
+                                    .stream()
+                                    .map(pm -> {
+                                        var media = pm.getMedia();
+                                        return new MediaResponse(
+                                                media.getMediaId(),
+                                                media.getType(),
+                                                media.getUrl(),
+                                                media.getName(),
+                                                media.getSize()
+                                        );
+                                    })
+                                    .toList();
+
+                    long likeCount =
+                            likeRepository.countByPostPostId(post.getPostId());
+
+                    long commentCount =
+                            commentRepository.countByPostPostId(post.getPostId());
+
+                    boolean likedByMe =
+                            likeRepository.existsByUserUserIdAndPostPostId(
+                                    userId, post.getPostId()
+                            );
+
+                    return new PublicPostResponse(
+                            post.getPostId(),
+                            post.getUser().getUsername(),
+                            post.getUser().getProfilePicture(),
+                            post.getText(),
+                            mediaResponses,
+                            likeCount,
+                            commentCount,
+                            post.getCreatedAt(),
+                            post.getUpdatedAt(),
+                            likedByMe
+                    );
+                });
+    }
+
 }

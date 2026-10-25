@@ -3,6 +3,8 @@ package com.suryaar.socialmedia.repository;
 
 import com.suryaar.socialmedia.entity.Follow;
 import com.suryaar.socialmedia.entity.FollowId;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -30,4 +32,24 @@ public interface FollowRepository
             Long followerId,
             Long followingId);
 
+    @Modifying
+    @Query("""
+    DELETE FROM Follow f
+    WHERE f.follower.userId = :followerId
+      AND f.following.userId = :followingId
+    """)
+    int deleteFollow(
+            @Param("followerId") Long followerId,
+            @Param("followingId") Long followingId
+    );
+
+    Page<Follow> findByFollowing_UserIdOrderByFollowerUsernameAsc(
+            Long followingId,
+            Pageable pageable
+    );
+
+    Page<Follow> findByFollower_UserIdOrderByFollowingUsernameAsc(
+            Long followerId,
+            Pageable pageable
+    );
 }

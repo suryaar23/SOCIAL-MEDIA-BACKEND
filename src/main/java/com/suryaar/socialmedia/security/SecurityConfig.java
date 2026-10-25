@@ -50,6 +50,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/users/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/*/posts").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/posts/*").permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/users/*/followers",
+                                "/api/users/*/following"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(

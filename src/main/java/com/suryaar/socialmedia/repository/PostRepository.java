@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.Optional;
 
 public interface PostRepository
@@ -30,5 +31,12 @@ public interface PostRepository
     Optional<Post> findByPostIdAndUserStatus(
             Long postId,
             UserStatus status
+    );
+
+    Page<Post> findByUserUserIdInAndUserStatusAndUserUserIdNotOrderByCreatedAtDesc(
+            Collection<Long> userIds,
+            UserStatus status,
+            Long excludedUserId,
+            Pageable pageable
     );
 }
