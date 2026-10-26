@@ -2,7 +2,7 @@
 package com.suryaar.socialmedia.controller;
 
 import com.suryaar.socialmedia.dto.PublicProfileResponse;
-import com.suryaar.socialmedia.service.UserService;
+import com.suryaar.socialmedia.service.ProfileService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/users")
 public class PublicProfileController {
 
-    private final UserService userService;
+    private final ProfileService profileService;
 
-    public PublicProfileController(UserService userService) {
-        this.userService = userService;
+    public PublicProfileController(ProfileService profileService) {
+        this.profileService = profileService;
     }
 
     @GetMapping("/{username}")
@@ -31,7 +31,7 @@ public class PublicProfileController {
         }
 
         PublicProfileResponse response =
-                userService.getPublicProfile(username, viewerUserId);
+                profileService.getPublicProfile(username, viewerUserId);
 
         return ResponseEntity.ok(response);
     }

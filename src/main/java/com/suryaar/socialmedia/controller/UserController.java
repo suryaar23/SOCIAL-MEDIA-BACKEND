@@ -3,7 +3,7 @@ package com.suryaar.socialmedia.controller;
 
 import com.suryaar.socialmedia.dto.CreateUserRequest;
 import com.suryaar.socialmedia.dto.UserResponse;
-import com.suryaar.socialmedia.service.UserService;
+import com.suryaar.socialmedia.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,17 +19,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RequestMapping("/api/auth")
 public class UserController {
 
-    private final UserService userService;
+    private final AuthService authService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
+    public UserController(AuthService authService) {
+        this.authService = authService;
     }
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> registerUser(
             @Valid @RequestBody CreateUserRequest request) {
 
-        UserResponse response = userService.registerUser(request);
+        UserResponse response = authService.registerUser(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -41,7 +41,7 @@ public class UserController {
     public ResponseEntity<LoginResponse> login(
             @Valid @RequestBody LoginRequest request) {
 
-        LoginResponse response = userService.loginUser(request);
+        LoginResponse response = authService.loginUser(request);
 
         return ResponseEntity.ok(response);
     }
@@ -51,7 +51,7 @@ public class UserController {
         String authorizationHeader =
                 request.getHeader("Authorization");
 
-        userService.logoutUser(authorizationHeader);
+        authService.logoutUser(authorizationHeader);
 
         return ResponseEntity.noContent().build();
     }
@@ -64,9 +64,8 @@ public class UserController {
 
         Long userId = (Long) authentication.getPrincipal();
 
-        userService.changePassword(userId, request);
+        authService.changePassword(userId, request);
 
         return ResponseEntity.noContent().build();
     }
-
 }

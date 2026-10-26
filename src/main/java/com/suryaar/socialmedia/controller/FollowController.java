@@ -1,7 +1,7 @@
 
 package com.suryaar.socialmedia.controller;
 
-import com.suryaar.socialmedia.service.UserService;
+import com.suryaar.socialmedia.service.FollowService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/users/{username}/follow")
 public class FollowController {
 
-    private final UserService userService;
+    private final FollowService followService;
 
-    public FollowController(UserService userService) {
-        this.userService = userService;
+    public FollowController(FollowService followService) {
+        this.followService = followService;
     }
 
     @PostMapping
@@ -27,7 +27,7 @@ public class FollowController {
 
         Long followerId = (Long) authentication.getPrincipal();
 
-        userService.followUser(followerId, username);
+        followService.followUser(followerId, username);
 
         return ResponseEntity.noContent().build();
     }
@@ -39,7 +39,7 @@ public class FollowController {
 
         Long followerId = (Long) authentication.getPrincipal();
 
-        userService.unfollowUser(followerId, username);
+        followService.unfollowUser(followerId, username);
 
         return ResponseEntity.noContent().build();
     }

@@ -3,7 +3,7 @@ package com.suryaar.socialmedia.controller;
 
 import com.suryaar.socialmedia.dto.MeResponse;
 import com.suryaar.socialmedia.dto.UpdateMyProfileRequest;
-import com.suryaar.socialmedia.service.UserService;
+import com.suryaar.socialmedia.service.ProfileService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/users/me")
 public class MeController {
 
-    private final UserService userService;
+    private final ProfileService profileService;
 
-    public MeController(UserService userService) {
-        this.userService = userService;
+    public MeController(ProfileService profileService) {
+        this.profileService = profileService;
     }
 
     @GetMapping
@@ -30,7 +30,7 @@ public class MeController {
 
         Long userId = (Long) authentication.getPrincipal();
 
-        MeResponse response = userService.getMyProfile(userId);
+        MeResponse response = profileService.getMyProfile(userId);
 
         return ResponseEntity.ok(response);
     }
@@ -44,7 +44,7 @@ public class MeController {
         Long userId = (Long) authentication.getPrincipal();
 
         MeResponse response =
-                userService.updateMyProfile(userId, request);
+                profileService.updateMyProfile(userId, request);
 
         return ResponseEntity.ok(response);
     }
@@ -56,7 +56,7 @@ public class MeController {
 
         Long userId = (Long) authentication.getPrincipal();
 
-        userService.deleteMyAccount(userId);
+        profileService.deleteMyAccount(userId);
 
         return ResponseEntity.noContent().build();
     }

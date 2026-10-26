@@ -2,7 +2,7 @@
 package com.suryaar.socialmedia.controller;
 
 import com.suryaar.socialmedia.dto.PublicPostResponse;
-import com.suryaar.socialmedia.service.UserService;
+import com.suryaar.socialmedia.service.PostService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/users")
 public class PublicPostsController {
 
-    private final UserService userService;
+    private final PostService postService;
 
-    public PublicPostsController(UserService userService) {
-        this.userService = userService;
+    public PublicPostsController(PostService postService) {
+        this.postService = postService;
     }
 
     @GetMapping("/{username}/posts")
@@ -28,7 +28,7 @@ public class PublicPostsController {
             @RequestParam(defaultValue = "10") int size) {
 
         Page<PublicPostResponse> posts =
-                userService.getPublicPosts(username, page, size);
+                postService.getPublicPosts(username, page, size);
 
         return ResponseEntity.ok(posts);
     }

@@ -2,7 +2,7 @@
 package com.suryaar.socialmedia.controller;
 
 import com.suryaar.socialmedia.dto.FollowUserResponse;
-import com.suryaar.socialmedia.service.UserService;
+import com.suryaar.socialmedia.service.FollowService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/users/{username}")
 public class FollowListController {
 
-    private final UserService userService;
+    private final FollowService followService;
 
-    public FollowListController(UserService userService) {
-        this.userService = userService;
+    public FollowListController(FollowService followService) {
+        this.followService = followService;
     }
 
     @GetMapping("/followers")
@@ -30,7 +30,7 @@ public class FollowListController {
             Authentication authentication) {
 
         Page<FollowUserResponse> followers =
-                userService.getFollowers(username, page, size);
+                followService.getFollowers(username, page, size);
 
         return ResponseEntity.ok(followers);
     }
@@ -43,7 +43,7 @@ public class FollowListController {
             Authentication authentication) {
 
         Page<FollowUserResponse> following =
-                userService.getFollowing(username, page, size);
+                followService.getFollowing(username, page, size);
 
         return ResponseEntity.ok(following);
     }

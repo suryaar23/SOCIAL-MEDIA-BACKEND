@@ -2,7 +2,7 @@
 package com.suryaar.socialmedia.controller;
 
 import com.suryaar.socialmedia.dto.PublicPostResponse;
-import com.suryaar.socialmedia.service.UserService;
+import com.suryaar.socialmedia.service.PostService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/posts")
 public class PublicPostController {
 
-    private final UserService userService;
+    private final PostService postService;
 
-    public PublicPostController(UserService userService) {
-        this.userService = userService;
+    public PublicPostController(PostService postService) {
+        this.postService = postService;
     }
 
 
@@ -35,7 +35,7 @@ public class PublicPostController {
         }
 
         PublicPostResponse response =
-                userService.getPublicPost(postId, viewerUserId);
+                postService.getPublicPost(postId, viewerUserId);
 
         return ResponseEntity.ok(response);
     }

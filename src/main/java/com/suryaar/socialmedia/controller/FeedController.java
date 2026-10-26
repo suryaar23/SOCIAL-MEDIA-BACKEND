@@ -2,7 +2,7 @@
 package com.suryaar.socialmedia.controller;
 
 import com.suryaar.socialmedia.dto.PublicPostResponse;
-import com.suryaar.socialmedia.service.UserService;
+import com.suryaar.socialmedia.service.PostService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/users/me/feed")
 public class FeedController {
 
-    private final UserService userService;
+    private final PostService postService;
 
-    public FeedController(UserService userService) {
-        this.userService = userService;
+    public FeedController(PostService postService) {
+        this.postService = postService;
     }
 
     @GetMapping
@@ -30,7 +30,7 @@ public class FeedController {
         Long userId = (Long) authentication.getPrincipal();
 
         Page<PublicPostResponse> feed =
-                userService.getFeed(userId, page, size);
+                postService.getFeed(userId, page, size);
 
         return ResponseEntity.ok(feed);
     }

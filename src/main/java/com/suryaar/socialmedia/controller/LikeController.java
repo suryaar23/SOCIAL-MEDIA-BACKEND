@@ -1,7 +1,7 @@
 
 package com.suryaar.socialmedia.controller;
 
-import com.suryaar.socialmedia.service.UserService;
+import com.suryaar.socialmedia.service.LikeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/posts/{postId}/like")
 public class LikeController {
 
-    private final UserService userService;
+    private final LikeService likeService;
 
-    public LikeController(UserService userService) {
-        this.userService = userService;
+    public LikeController(LikeService likeService) {
+        this.likeService = likeService;
     }
 
     @PostMapping
@@ -27,7 +27,7 @@ public class LikeController {
 
         Long userId = (Long) authentication.getPrincipal();
 
-        userService.likePost(userId, postId);
+        likeService.likePost(userId, postId);
 
         return ResponseEntity.noContent().build();
     }
@@ -39,7 +39,7 @@ public class LikeController {
 
         Long userId = (Long) authentication.getPrincipal();
 
-        userService.unlikePost(userId, postId);
+        likeService.unlikePost(userId, postId);
 
         return ResponseEntity.noContent().build();
     }

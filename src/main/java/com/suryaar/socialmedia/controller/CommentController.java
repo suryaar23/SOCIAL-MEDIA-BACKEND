@@ -4,7 +4,7 @@ package com.suryaar.socialmedia.controller;
 import com.suryaar.socialmedia.dto.CommentResponse;
 import com.suryaar.socialmedia.dto.CreateCommentRequest;
 import com.suryaar.socialmedia.dto.UpdateCommentRequest;
-import com.suryaar.socialmedia.service.UserService;
+import com.suryaar.socialmedia.service.CommentService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -18,10 +18,10 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 @RequestMapping("/api/posts/{postId}/comments")
 public class CommentController {
 
-    private final UserService userService;
+    private final CommentService commentService;
 
-    public CommentController(UserService userService) {
-        this.userService = userService;
+    public CommentController(CommentService commentService) {
+        this.commentService = commentService;
     }
 
     @PostMapping
@@ -33,7 +33,7 @@ public class CommentController {
         Long userId = (Long) authentication.getPrincipal();
 
         CommentResponse response =
-                userService.createComment(userId, postId, request);
+                commentService.createComment(userId, postId, request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -49,7 +49,7 @@ public class CommentController {
         Long userId = (Long) authentication.getPrincipal();
 
         Page<CommentResponse> comments =
-                userService.getComments(userId, postId, page, size);
+                commentService.getComments(userId, postId, page, size);
 
         return ResponseEntity.ok(comments);
     }
@@ -64,7 +64,7 @@ public class CommentController {
 
         Long userId = (Long) authentication.getPrincipal();
 
-        CommentResponse response = userService.updateComment(
+        CommentResponse response = commentService.updateComment(
                 userId, postId, commentId, request
         );
 
@@ -79,7 +79,7 @@ public class CommentController {
 
         Long userId = (Long) authentication.getPrincipal();
 
-        userService.deleteComment(userId, postId, commentId);
+        commentService.deleteComment(userId, postId, commentId);
 
         return ResponseEntity.noContent().build();
     }
