@@ -34,7 +34,7 @@ public class Post {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    protected Post() {
+    public Post() {
     }
 
     @PrePersist

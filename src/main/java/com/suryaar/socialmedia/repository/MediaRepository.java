@@ -1,4 +1,3 @@
-
 package com.suryaar.socialmedia.repository;
 
 import com.suryaar.socialmedia.entity.Media;
@@ -11,4 +10,9 @@ public interface MediaRepository
         extends JpaRepository<Media, Long> {
 
     List<Media> findByMediaIdIn(Collection<Long> mediaIds);
+
+    boolean existsByMediaIdAndUploadedBy_UserId(
+            Long mediaId,
+            Long userId
+    );
 }

@@ -25,14 +25,19 @@ public class Media {
     @Column(name = "size", nullable = false)
     private Long size;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "uploaded_by", nullable = false)
+    private User uploadedBy;
+
     protected Media() {
     }
 
-    public Media(MediaType type, String url, String name, Long size) {
+    public Media(MediaType type, String url, String name, Long size, User uploadedBy) {
         this.type = type;
         this.url = url;
         this.name = name;
         this.size = size;
+        this.uploadedBy = uploadedBy;
     }
 
     public Long getMediaId() {
@@ -70,4 +75,8 @@ public class Media {
     public void setSize(Long size) {
         this.size = size;
     }
+
+    public User getUploadedBy() { return uploadedBy; }
+
+    public void setUploadedBy(User uploadedBy) { this.uploadedBy = uploadedBy; }
 }

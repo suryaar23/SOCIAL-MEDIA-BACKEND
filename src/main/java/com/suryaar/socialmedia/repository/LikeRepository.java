@@ -27,4 +27,8 @@ public interface LikeRepository
             @Param("userId") Long userId,
             @Param("postId") Long postId
     );
+
+    @Modifying
+    @Query("DELETE FROM Like l WHERE l.post.postId = :postId")
+    int deleteAllByPostId(@Param("postId") Long postId);
 }

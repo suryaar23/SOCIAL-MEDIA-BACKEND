@@ -77,7 +77,7 @@ public class CommentController {
             @PathVariable Long commentId,
             Authentication authentication) {
 
-        Long userId = (Long) authentication.getPrincipal();
+        Long userId = (Long) authentication.getPrincipal(); 
 
         commentService.deleteComment(userId, postId, commentId);
 

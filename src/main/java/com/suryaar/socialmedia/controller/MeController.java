@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/api/users/me")
 public class MeController {
@@ -52,7 +54,7 @@ public class MeController {
 
     @DeleteMapping
     public ResponseEntity<Void> deleteMyAccount(
-            Authentication authentication) {
+            Authentication authentication) throws IOException {
 
         Long userId = (Long) authentication.getPrincipal();
 

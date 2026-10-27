@@ -3,15 +3,19 @@ package com.suryaar.socialmedia.service;
 import com.suryaar.socialmedia.dto.MeResponse;
 import com.suryaar.socialmedia.dto.PublicProfileResponse;
 import com.suryaar.socialmedia.dto.UpdateMyProfileRequest;
-import com.suryaar.socialmedia.entity.User;
-import com.suryaar.socialmedia.entity.UserStatus;
+import com.suryaar.socialmedia.entity.*;
 import com.suryaar.socialmedia.exception.DuplicateResourceException;
 import com.suryaar.socialmedia.exception.InvalidCredentialsException;
-import com.suryaar.socialmedia.repository.FollowRepository;
-import com.suryaar.socialmedia.repository.PostRepository;
-import com.suryaar.socialmedia.repository.UserRepository;
+import com.suryaar.socialmedia.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+import java.util.List;
 
 @Service
 public class ProfileService {
@@ -19,11 +23,13 @@ public class ProfileService {
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
     private final PostRepository postRepository;
+    private final PostService postService;
 
-    public ProfileService(UserRepository userRepository, FollowRepository followRepository, PostRepository postRepository) {
+    public ProfileService(UserRepository userRepository, FollowRepository followRepository, PostRepository postRepository, PostService postService) {
         this.userRepository = userRepository;
         this.followRepository = followRepository;
         this.postRepository = postRepository;
+        this.postService = postService;
     }
 
     @Transactional(readOnly = true)
@@ -111,7 +117,6 @@ public class ProfileService {
         );
     }
 
-
     @Transactional
     public void deleteMyAccount(Long userId) {
 
@@ -121,9 +126,13 @@ public class ProfileService {
                 .orElseThrow(() ->
                         new InvalidCredentialsException("User not found"));
 
-        followRepository.deleteAllRelationshipsForUser(userId);
+        List<Post> userPosts = postRepository.findByUserUserId(userId);
 
-        postRepository.deleteAllByUserId(userId);
+        for (Post post : userPosts) {
+            postService.deletePost(userId, post.getPostId());
+        }
+
+        followRepository.deleteAllRelationshipsForUser(userId);
 
         int updatedRows = userRepository.softDeleteUser(userId);
 
@@ -132,7 +141,6 @@ public class ProfileService {
                     "Account deletion could not be completed");
         }
     }
-
 
     @Transactional(readOnly = true)
     public PublicProfileResponse getPublicProfile(
@@ -172,5 +180,66 @@ public class ProfileService {
                 followersCount,
                 followingCount,
                 isFollowing);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PublicProfileResponse> searchUsers(
+            String username,
+            int page,
+            int size,
+            Long viewerUserId
+    ) {
+        if (username == null || username.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Search username cannot be empty"
+            );
+        }
+
+        if (page < 0 || size < 1 || size > 100) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid pagination parameters"
+            );
+        }
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.ASC, "username")
+        );
+
+        Page<User> users = userRepository
+                .findByStatusAndUsernameContainingIgnoreCase(
+                        UserStatus.ACTIVE,
+                        username.trim(),
+                        pageable
+                );
+
+        return users.map(user -> {
+            Boolean isFollowing = null;
+
+            if (viewerUserId != null
+                    && !viewerUserId.equals(user.getUserId())) {
+
+                isFollowing = followRepository
+                        .existsByFollower_UserIdAndFollowing_UserId(
+                                viewerUserId,
+                                user.getUserId()
+                        );
+            }
+
+            return new PublicProfileResponse(
+                    user.getUsername(),
+                    user.getProfilePicture(),
+                    followRepository.countByFollowing_UserId(
+                            user.getUserId()
+                    ),
+                    followRepository.countByFollower_UserId(
+                            user.getUserId()
+                    ),
+                    isFollowing
+            );
+        });
     }
 }

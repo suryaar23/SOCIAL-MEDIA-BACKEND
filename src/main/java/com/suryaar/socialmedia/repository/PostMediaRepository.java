@@ -12,4 +12,8 @@ public interface PostMediaRepository
 
     List<PostMedia> findByPostPostIdOrderByPositionAsc(
             Long postId);
+
+    boolean existsByMediaMediaId(Long mediaId);
+
+    List<PostMedia> findByPostPostId(Long postId);
 }

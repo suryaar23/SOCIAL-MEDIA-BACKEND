@@ -1,6 +1,7 @@
 
 package com.suryaar.socialmedia.security;
 
+import com.suryaar.socialmedia.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +12,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import tools.jackson.databind.ObjectMapper;
+
+import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
@@ -33,14 +37,41 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+
+
                 .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint((request, response, authException) ->
-                                response.sendError(
-                                        HttpServletResponse.SC_UNAUTHORIZED,
-                                        "Unauthorized"
-                                )
-                        )
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+
+                            ErrorResponse error = new ErrorResponse(
+                                    401,
+                                    "Authentication required",
+                                    Map.of()
+                            );
+
+                            new ObjectMapper().writeValue(
+                                    response.getOutputStream(),
+                                    error
+                            );
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType("application/json");
+
+                            ErrorResponse error = new ErrorResponse(
+                                    403,
+                                    "Access denied",
+                                    Map.of()
+                            );
+
+                            new ObjectMapper().writeValue(
+                                    response.getOutputStream(),
+                                    error
+                            );
+                        })
                 )
+
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth/register",
@@ -55,6 +86,7 @@ public class SecurityConfig {
                                 "/api/users/*/followers",
                                 "/api/users/*/following"
                         ).permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
