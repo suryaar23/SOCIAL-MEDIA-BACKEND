@@ -66,7 +66,6 @@ public class AuthService {
         );
     }
 
-
     public LoginResponse loginUser(LoginRequest request) {
 
         String identifier = request.getIdentifier().trim();

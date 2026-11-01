@@ -1,5 +1,6 @@
 package com.suryaar.socialmedia.service;
 
+import com.suryaar.socialmedia.dto.MediaResponse;
 import com.suryaar.socialmedia.entity.Media;
 import com.suryaar.socialmedia.entity.MediaType;
 import com.suryaar.socialmedia.entity.User;
@@ -86,7 +87,7 @@ class MediaServiceTest {
         when(mediaRepository.save(any(Media.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Media result = mediaService.uploadMedia(file, 1L);
+        MediaResponse result = mediaService.uploadMedia(file, 1L);
 
         assertEquals("photo.jpg", result.getName());
         assertEquals(3L, result.getSize());

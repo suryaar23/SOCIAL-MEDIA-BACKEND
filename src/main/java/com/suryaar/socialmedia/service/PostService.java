@@ -245,7 +245,7 @@ public class PostService {
     }
 
     @Transactional
-    public Post createPost(Long userId, CreatePostRequest request) {
+    public PostResponse createPost(Long userId, CreatePostRequest request) {
 
         String text = request.getText();
 
@@ -359,7 +359,14 @@ public class PostService {
             postMediaRepository.save(postMedia);
         }
 
-        return savedPost;
+        return new PostResponse(
+                savedPost.getPostId(),
+                user.getUserId(),
+                user.getUsername(),
+                savedPost.getText(),
+                savedPost.getCreatedAt(),
+                savedPost.getUpdatedAt()
+        );
     }
 
     @Transactional

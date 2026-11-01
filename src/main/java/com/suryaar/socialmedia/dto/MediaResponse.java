@@ -2,13 +2,36 @@
 package com.suryaar.socialmedia.dto;
 
 import com.suryaar.socialmedia.entity.MediaType;
+import io.swagger.v3.oas.annotations.media.Schema;
 
+@Schema(description = "Response containing details of an uploaded media file")
 public class MediaResponse {
 
+    @Schema(description = "Unique identifier of the media file", example = "101")
     private Long mediaId;
+
+    @Schema(
+            description = "Type of media file",
+            example = "IMAGE"
+    )
     private MediaType type;
+
+    @Schema(
+            description = "URL used to access the uploaded media",
+            example = "https://example.com/uploads/image.jpg"
+    )
     private String url;
+
+    @Schema(
+            description = "Original name of the uploaded file",
+            example = "profile-image.jpg"
+    )
     private String name;
+
+    @Schema(
+            description = "Size of the uploaded file in bytes",
+            example = "204800"
+    )
     private Long size;
 
     public MediaResponse(

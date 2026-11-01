@@ -1,16 +1,44 @@
 
 package com.suryaar.socialmedia.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Schema(description = "Response containing publicly accessible post details and viewer-specific like information")
 public class PublicPostResponse {
 
+    @Schema(description = "Unique identifier of the post", example = "101")
     private Long postId;
+
+    @Schema(description = "Username of the post author", example = "surya_dev")
     private String username;
+
+    @Schema(
+            description = "Text content of the post",
+            example = "Exploring Spring Boot!",
+            nullable = true
+    )
     private String text;
+
+    @Schema(
+            description = "Date and time when the post was created",
+            example = "2026-10-25T14:30:00"
+    )
     private LocalDateTime createdAt;
+
+    @Schema(
+            description = "Date and time when the post was last updated",
+            example = "2026-10-25T15:00:00"
+    )
     private LocalDateTime updatedAt;
+
+    @Schema(
+            description = "Indicates whether the current viewer has liked this post. May be null for unauthenticated viewers.",
+            example = "true",
+            nullable = true
+    )
     private Boolean likedByMe;
 
     public PublicPostResponse(

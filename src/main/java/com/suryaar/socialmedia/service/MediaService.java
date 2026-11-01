@@ -1,5 +1,6 @@
 package com.suryaar.socialmedia.service;
 
+import com.suryaar.socialmedia.dto.MediaResponse;
 import com.suryaar.socialmedia.entity.User;
 import com.suryaar.socialmedia.entity.UserStatus;
 import com.suryaar.socialmedia.repository.MediaRepository;
@@ -32,7 +33,7 @@ public class MediaService {
         this.postMediaRepository = postMediaRepository;
     }
 
-    public Media uploadMedia(MultipartFile file, Long userId) throws IOException {
+    public MediaResponse uploadMedia(MultipartFile file, Long userId) throws IOException {
 
         User user = userRepository.findById(userId)
                 .filter(u -> u.getStatus() == UserStatus.ACTIVE)
@@ -58,7 +59,15 @@ public class MediaService {
                     user
             );
 
-            return mediaRepository.save(media);
+            Media savedMedia = mediaRepository.save(media);
+
+            return new MediaResponse(
+                    savedMedia.getMediaId(),
+                    savedMedia.getType(),
+                    savedMedia.getUrl(),
+                    savedMedia.getName(),
+                    savedMedia.getSize()
+            );
 
         } catch (Exception e) {
             try {
