@@ -29,7 +29,7 @@ public class Media {
     @JoinColumn(name = "uploaded_by", nullable = false)
     private User uploadedBy;
 
-    protected Media() {
+    public Media() {
     }
 
     public Media(MediaType type, String url, String name, Long size, User uploadedBy) {
@@ -43,6 +43,8 @@ public class Media {
     public Long getMediaId() {
         return mediaId;
     }
+
+    public void setMediaId(Long mediaId) { this.mediaId = mediaId; }
 
     public MediaType getType() {
         return type;

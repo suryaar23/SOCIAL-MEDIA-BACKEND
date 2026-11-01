@@ -63,6 +63,10 @@ public class Comment {
         return commentId;
     }
 
+    public void setCommentId(Long commentId) {
+        this.commentId = commentId;
+    }
+
     public User getUser() {
         return user;
     }

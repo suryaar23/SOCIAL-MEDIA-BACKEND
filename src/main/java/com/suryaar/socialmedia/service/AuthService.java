@@ -129,8 +129,6 @@ public class AuthService {
         }
     }
 
-
-
     @Transactional
     public void changePassword(
             Long userId,

@@ -17,11 +17,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/api/auth")
-public class UserController {
+public class AuthController {
 
     private final AuthService authService;
 
-    public UserController(AuthService authService) {
+    public AuthController(AuthService authService) {
         this.authService = authService;
     }
 

@@ -28,6 +28,13 @@ public class PublicPostResponse {
     }
 
     public PublicPostResponse(Long postId, String username, String profilePicture, String text, List<MediaResponse> mediaResponses, long likeCount, long commentCount, LocalDateTime createdAt, LocalDateTime updatedAt, Boolean likedByMe) {
+
+        this.postId = postId;
+        this.username = username;
+        this.text = text;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.likedByMe = likedByMe;
     }
 
     public Long getPostId() {

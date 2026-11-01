@@ -10,7 +10,8 @@ public class UpdateCommentRequest {
     @Size(max = 250, message = "Comment cannot exceed 250 characters")
     private String text;
 
-    public UpdateCommentRequest() {
+    public UpdateCommentRequest(String text) {
+        this.text = text;
     }
 
     public String getText() {
