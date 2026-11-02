@@ -17,9 +17,10 @@ public class MediaResponse {
     private MediaType type;
 
     @Schema(
-            description = "URL used to access the uploaded media",
-            example = "https://example.com/uploads/image.jpg"
-    )
+            description = "Temporary presigned URL for accessing the uploaded media. " +
+                    "The URL expires after 30 minutes.",
+            example = "https://s3.eu-central-003.backblazeb2.com/..."
+    )   
     private String url;
 
     @Schema(

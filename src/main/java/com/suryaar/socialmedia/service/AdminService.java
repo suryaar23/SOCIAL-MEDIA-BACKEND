@@ -24,13 +24,15 @@ public class AdminService {
     private final PostMediaRepository postMediaRepository;
     private final LikeRepository likeRepository;
     private final CommentRepository commentRepository;
+    private final MediaStorageService mediaStorageService;
 
-    public AdminService(UserRepository userRepository, PostRepository postRepository, PostMediaRepository postMediaRepository, LikeRepository likeRepository, CommentRepository commentRepository) {
+    public AdminService(UserRepository userRepository, PostRepository postRepository, PostMediaRepository postMediaRepository, LikeRepository likeRepository, CommentRepository commentRepository, MediaStorageService mediaStorageService) {
         this.userRepository = userRepository;
         this.postRepository = postRepository;
         this.postMediaRepository = postMediaRepository;
         this.likeRepository = likeRepository;
         this.commentRepository = commentRepository;
+        this.mediaStorageService = mediaStorageService;
     }
 
     @Transactional(readOnly = true)
@@ -90,7 +92,7 @@ public class AdminService {
                                         return new MediaResponse(
                                                 media.getMediaId(),
                                                 media.getType(),
-                                                media.getUrl(),
+                                                mediaStorageService.generatePresignedUrl(media.getUrl()),
                                                 media.getName(),
                                                 media.getSize()
                                         );

@@ -1,15 +1,24 @@
 package com.suryaar.socialmedia.service;
 
 import com.suryaar.socialmedia.entity.MediaType;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.UUID;
 import org.apache.tika.Tika;
+
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+
+import java.time.Duration;
 import java.io.InputStream;
 
 @Service
@@ -17,20 +26,21 @@ public class MediaStorageService {
 
     private final Tika tika = new Tika();
 
-    private final Path uploadDirectory = Paths.get("uploads")
-            .toAbsolutePath()
-            .normalize();
+    private final S3Client s3Client;
+    private final S3Presigner s3Presigner;
 
-    public MediaStorageService() throws IOException {
-        Files.createDirectories(uploadDirectory);
+    @Value("${b2.bucket-name}")
+    private String bucketName;
+
+    public MediaStorageService(S3Client s3Client, S3Presigner s3Presigner) {
+        this.s3Client = s3Client;
+        this.s3Presigner = s3Presigner;
     }
 
     public String storeFile(MultipartFile file) throws IOException {
 
         validateFile(file);
-
         validateFileType(file);
-
         validateActualFileType(file);
 
         String originalFilename = file.getOriginalFilename();
@@ -45,13 +55,24 @@ public class MediaStorageService {
 
         String storedFilename = UUID.randomUUID() + extension;
 
-        Path targetPath = uploadDirectory.resolve(storedFilename).normalize();
+        String contentType;
 
-        if (!targetPath.startsWith(uploadDirectory)) {
-            throw new IOException("Invalid file path");
+        try (InputStream inputStream = file.getInputStream()) {
+            contentType = tika.detect(inputStream, originalFilename);
         }
 
-        Files.copy(file.getInputStream(), targetPath);
+        PutObjectRequest request = PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(storedFilename)
+                .contentType(contentType)
+                .build();
+
+        try (InputStream inputStream = file.getInputStream()) {
+            s3Client.putObject(
+                    request,
+                    RequestBody.fromInputStream(inputStream, file.getSize())
+            );
+        }
 
         return storedFilename;
     }
@@ -123,10 +144,6 @@ public class MediaStorageService {
         };
     }
 
-    public String getFileUrl(String storedFilename) {
-        return "/uploads/" + storedFilename;
-    }
-
     private void validateActualFileType(MultipartFile file) throws IOException {
 
         String filename = file.getOriginalFilename();
@@ -169,13 +186,46 @@ public class MediaStorageService {
         }
     }
 
-    public void deleteFile(String storedFilename) throws IOException {
-        Path filePath = uploadDirectory.resolve(storedFilename).normalize();
+    public void deleteFile(String storedFilename) {
 
-        if (!filePath.startsWith(uploadDirectory)) {
-            throw new IOException("Invalid file path");
+        validateStoredFilename(storedFilename);
+
+        DeleteObjectRequest request = DeleteObjectRequest.builder()
+                .bucket(bucketName)
+                .key(storedFilename)
+                .build();
+
+        s3Client.deleteObject(request);
+    }
+
+    public String generatePresignedUrl(String storedFilename) {
+
+        validateStoredFilename(storedFilename);
+
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(storedFilename)
+                .build();
+
+        GetObjectPresignRequest presignRequest =
+                GetObjectPresignRequest.builder()
+                        .signatureDuration(Duration.ofMinutes(30))
+                        .getObjectRequest(getObjectRequest)
+                        .build();
+
+        return s3Presigner.presignGetObject(presignRequest)
+                .url()
+                .toString();
+    }
+
+    private void validateStoredFilename(String storedFilename) {
+
+        if (storedFilename == null || storedFilename.isBlank()
+                || storedFilename.contains("/")
+                || storedFilename.contains("\\")
+                || storedFilename.contains("..")) {
+
+            throw new IllegalArgumentException("Invalid file name");
         }
-
-        Files.deleteIfExists(filePath);
     }
 }

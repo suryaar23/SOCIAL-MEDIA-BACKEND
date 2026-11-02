@@ -17,9 +17,9 @@ class MediaStorageServiceTest {
     private MediaStorageService mediaStorageService;
 
     @BeforeEach
-    void setUp() throws IOException {
-        mediaStorageService = new MediaStorageService();
-    }
+//    void setUp() throws IOException {
+//        mediaStorageService = new MediaStorageService();
+//    }
 
     private byte[] validJpegBytes() throws IOException {
         try (var input = getClass().getResourceAsStream("/test-image.jpg")) {

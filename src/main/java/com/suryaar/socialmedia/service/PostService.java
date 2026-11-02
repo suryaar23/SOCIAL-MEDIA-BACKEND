@@ -84,7 +84,7 @@ public class PostService {
                                         return new MediaResponse(
                                                 media.getMediaId(),
                                                 media.getType(),
-                                                media.getUrl(),
+                                                mediaStorageService.generatePresignedUrl(media.getUrl()),
                                                 media.getName(),
                                                 media.getSize()
                                         );
@@ -131,7 +131,7 @@ public class PostService {
                             return new MediaResponse(
                                     media.getMediaId(),
                                     media.getType(),
-                                    media.getUrl(),
+                                    mediaStorageService.generatePresignedUrl(media.getUrl()),
                                     media.getName(),
                                     media.getSize()
                             );
@@ -211,7 +211,7 @@ public class PostService {
                                         return new MediaResponse(
                                                 media.getMediaId(),
                                                 media.getType(),
-                                                media.getUrl(),
+                                                mediaStorageService.generatePresignedUrl(media.getUrl()),
                                                 media.getName(),
                                                 media.getSize()
                                         );
@@ -464,17 +464,9 @@ public class PostService {
                         .orElse(null);
 
                 if (media != null) {
-                    String storedFilename = media.getUrl().substring(
-                            media.getUrl().lastIndexOf("/") + 1
-                    );
+                    String storedFilename = media.getUrl();
 
-                    try {
-                        mediaStorageService.deleteFile(storedFilename);
-                    } catch (IOException e) {
-                        throw new RuntimeException(
-                                "Failed to delete media file", e
-                        );
-                    }
+                    mediaStorageService.deleteFile(storedFilename);
 
                     mediaRepository.delete(media);
                 }

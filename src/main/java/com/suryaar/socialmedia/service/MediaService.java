@@ -47,13 +47,11 @@ public class MediaService {
         String storedFilename = mediaStorageService.storeFile(file);
 
         try {
-            String fileUrl = mediaStorageService.getFileUrl(storedFilename);
-
             MediaType mediaType = mediaStorageService.determineMediaType(file);
 
             Media media = new Media(
                     mediaType,
-                    fileUrl,
+                    storedFilename,
                     originalFilename,
                     file.getSize(),
                     user
@@ -61,10 +59,12 @@ public class MediaService {
 
             Media savedMedia = mediaRepository.save(media);
 
+            String presignedUrl = mediaStorageService.generatePresignedUrl(savedMedia.getUrl());
+
             return new MediaResponse(
                     savedMedia.getMediaId(),
                     savedMedia.getType(),
-                    savedMedia.getUrl(),
+                    presignedUrl,
                     savedMedia.getName(),
                     savedMedia.getSize()
             );
@@ -72,14 +72,14 @@ public class MediaService {
         } catch (Exception e) {
             try {
                 mediaStorageService.deleteFile(storedFilename);
-            } catch (IOException cleanupException) {
+            } catch (RuntimeException cleanupException) {
                 e.addSuppressed(cleanupException);
             }
 
             throw e;
         }
     }
-    
+
     public void deleteMedia(Long mediaId, Long userId) throws IOException {
 
         Media media = mediaRepository.findById(mediaId)
@@ -103,12 +103,7 @@ public class MediaService {
             );
         }
 
-        String storedFilename = media.getUrl().substring(
-                media.getUrl().lastIndexOf("/") + 1
-        );
-
-        mediaStorageService.deleteFile(storedFilename);
+        mediaStorageService.deleteFile(media.getUrl());
         mediaRepository.delete(media);
     }
-
 }
