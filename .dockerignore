@@ -1,0 +1,23 @@
+# Git
+.git
+.gitignore
+
+# Maven build output
+target/
+
+# IntelliJ
+.idea/
+*.iml
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+
+# Local uploads and logs
+uploads/
+logs/
+*.log
+
+# Docker environment variables
+.env.docker

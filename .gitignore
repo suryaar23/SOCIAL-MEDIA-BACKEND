@@ -34,3 +34,6 @@ build/
 
 # User-uploaded media
 /uploads/
+
+# Docker environment variables
+.env.docker
