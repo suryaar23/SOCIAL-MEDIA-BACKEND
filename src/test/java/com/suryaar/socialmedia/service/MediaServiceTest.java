@@ -78,9 +78,6 @@ class MediaServiceTest {
         when(mediaStorageService.storeFile(file))
                 .thenReturn("stored-photo.jpg");
 
-//        when(mediaStorageService.getFileUrl("stored-photo.jpg"))
-//                .thenReturn("http://localhost/uploads/stored-photo.jpg");
-
         when(mediaStorageService.determineMediaType(file))
                 .thenReturn(MediaType.IMAGE);
 
@@ -106,9 +103,6 @@ class MediaServiceTest {
 
         when(mediaStorageService.storeFile(file))
                 .thenReturn("stored-photo.jpg");
-
-//        when(mediaStorageService.getFileUrl("stored-photo.jpg"))
-//                .thenReturn("http://localhost/uploads/stored-photo.jpg");
 
         when(mediaStorageService.determineMediaType(file))
                 .thenReturn(MediaType.IMAGE);

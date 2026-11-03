@@ -1,25 +1,45 @@
 package com.suryaar.socialmedia.service;
 
 import com.suryaar.socialmedia.entity.MediaType;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.util.ReflectionTestUtils;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 
 class MediaStorageServiceTest {
 
+    @Mock
+    private S3Client s3Client;
+
+    @Mock
+    private S3Presigner s3Presigner;
+
     private MediaStorageService mediaStorageService;
+    private AutoCloseable mocks;
 
     @BeforeEach
-//    void setUp() throws IOException {
-//        mediaStorageService = new MediaStorageService();
-//    }
+    void setUp() throws IOException {
+        mocks = MockitoAnnotations.openMocks(this);
+        mediaStorageService = new MediaStorageService(s3Client, s3Presigner);
+        ReflectionTestUtils.setField(
+                mediaStorageService, "bucketName", "test-bucket");
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        mocks.close();
+    }
 
     private byte[] validJpegBytes() throws IOException {
         try (var input = getClass().getResourceAsStream("/test-image.jpg")) {
@@ -120,18 +140,10 @@ class MediaStorageServiceTest {
 
         assertNotNull(storedFilename);
         assertTrue(storedFilename.endsWith(".jpg"));
-
-        Path storedPath = Paths.get("uploads")
-                .toAbsolutePath()
-                .normalize()
-                .resolve(storedFilename);
-
-        try {
-            assertTrue(Files.exists(storedPath));
-            assertArrayEquals(validJpegBytes, Files.readAllBytes(storedPath));
-        } finally {
-            mediaStorageService.deleteFile(storedFilename);
-        }
+        verify(s3Client).putObject(
+                any(software.amazon.awssdk.services.s3.model.PutObjectRequest.class),
+                any(software.amazon.awssdk.core.sync.RequestBody.class)
+        );
     }
 
     @Test

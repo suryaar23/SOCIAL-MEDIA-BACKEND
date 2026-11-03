@@ -42,6 +42,9 @@ class AdminServiceTest {
     @Mock
     private CommentRepository commentRepository;
 
+    @Mock
+    private MediaStorageService mediaStorageService;
+
     private AdminService adminService;
     private AutoCloseable mocks;
 
@@ -49,13 +52,14 @@ class AdminServiceTest {
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
 
-//        adminService = new AdminService(
-//                userRepository,
-//                postRepository,
-//                postMediaRepository,
-//                likeRepository,
-//                commentRepository
-//        );
+        adminService = new AdminService(
+                userRepository,
+                postRepository,
+                postMediaRepository,
+                likeRepository,
+                commentRepository,
+                mediaStorageService
+        );
     }
 
     @AfterEach
